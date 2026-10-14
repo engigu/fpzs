@@ -24,6 +24,65 @@
     return false;
   }
 
+  const TAX_PREFIXES = [
+    /^[*＊]?[生生产]*生活服务[*＊]?/i,
+    /^[*＊]?现代服务[*＊]?/i,
+    /^[*＊]?交通运输[服务]*[*＊]?/i,
+    /^[*＊]?石油制品[*＊]?/i,
+    /^[*＊]?商业服务[*＊]?/i,
+    /^[*＊]?居民日常服务[*＊]?/i,
+    /^[*＊]?文化体育服务[*＊]?/i,
+    /^[*＊]?金融服务[*＊]?/i,
+    /^[*＊]?信息技术服务[*＊]?/i,
+    /^[*＊]?物流辅助[服务]*[*＊]?/i,
+    /^[*＊]?邮政服务[*＊]?/i,
+  ];
+
+  function cleanTaxPrefix(name) {
+    let s = (name || '').trim();
+    s = s.replace(/^[*＊][^*＊\n]+[*＊]/, '');
+    for (const p of TAX_PREFIXES) {
+      s = s.replace(p, '');
+    }
+    return s.trim();
+  }
+
+  const SCENE_RULES = [
+    { match: (s) => /^火车票(\s+[^\s-]+-[^\s-]+)?$/.test(s), norm: (s) => s },
+    { match: (s) => /航空|客运行程单|民航|机票|飞机票|航空运输/.test(s), norm: () => '飞机票' },
+    { isVehicle: true, match: (s) => /汽油|柴油|燃油|加油|乙醇汽油|车用汽油|92#|95#|98#|0#柴油|天然气|CNG|LPG/.test(s), norm: () => '加油费' },
+    { isVehicle: true, match: (s) => /通行费|高速|过路|过桥|ETC|路桥费/.test(s), norm: () => '通行费' },
+    { isVehicle: true, match: (s) => /停车|停放|泊车|车位/.test(s), norm: () => '停车费' },
+    { isVehicle: true, match: (s) => /修车|洗车|汽车维修|车辆维修|车辆保养|汽车保养|年检|补胎|换机油|机油/.test(s), norm: () => '车辆维保费' },
+    { match: (s) => /客运|打车|出租车|网约车|出行|代驾|交通费|包车|轮渡/.test(s), norm: () => '客运服务费' },
+    { match: (s) => /餐饮|餐费|堂食|外卖|正餐|快餐|工作餐|用餐|伙食|就餐|食品饮料|饭费|点心|茶饮/.test(s), norm: () => '餐饮费' },
+    { match: (s) => /住宿|酒店|客房|宾馆|旅馆|房费|民宿/.test(s), norm: () => '住宿费' },
+    { match: (s) => /办公用品|办公设备|耗材|打印纸|复印纸|文具|硒鼓|墨盒|笔记本|签字笔|办公杂品|纸张/.test(s), norm: () => '办公用品费' },
+    { match: (s) => /快递|物流|邮政|顺丰|货运|托运|邮费|邮寄|派送/.test(s), norm: () => '快递物流费' },
+    { match: (s) => /通讯|通信|话费|电话|移动通信|宽带|电信|移动|联通|流量/.test(s), norm: () => '通讯费' },
+    { match: (s) => /会务|会议|培训|研讨|展览|展会|峰会/.test(s), norm: () => '会务培训费' },
+    { match: (s) => /广告|推广|宣传|营销|展板|物料制作|海报/.test(s), norm: () => '广告宣传费' },
+    { match: (s) => /技术服务|软件|信息技术|云服务|系统开发|运维|SaaS|会员费|云主机/.test(s), norm: () => '技术服务费' },
+    { match: (s) => /物业|保洁|保安|水费|电费|燃气费|暖气|空调/.test(s), norm: () => '物业水电费' },
+  ];
+
+  function smartNormalizeProject(raw, plate) {
+    const cleaned = cleanTaxPrefix(raw);
+    for (const r of SCENE_RULES) {
+      if (r.match(cleaned) || r.match(raw)) {
+        const base = r.norm(cleaned || raw);
+        if (r.isVehicle && plate) {
+          return base + ' ' + plate;
+        }
+        return base;
+      }
+    }
+    if (plate) {
+      return (cleaned || raw || '电子发票') + ' ' + plate;
+    }
+    return cleaned || raw || '电子发票';
+  }
+
   async function extractInvoiceDataFromPdf(fileName, file) {
     try {
       await waitForPdfJs(8000);
@@ -152,65 +211,6 @@
             break;
           }
         }
-      }
-
-      const TAX_PREFIXES = [
-        /^[*＊]?[生生产]*生活服务[*＊]?/i,
-        /^[*＊]?现代服务[*＊]?/i,
-        /^[*＊]?交通运输[服务]*[*＊]?/i,
-        /^[*＊]?石油制品[*＊]?/i,
-        /^[*＊]?商业服务[*＊]?/i,
-        /^[*＊]?居民日常服务[*＊]?/i,
-        /^[*＊]?文化体育服务[*＊]?/i,
-        /^[*＊]?金融服务[*＊]?/i,
-        /^[*＊]?信息技术服务[*＊]?/i,
-        /^[*＊]?物流辅助[服务]*[*＊]?/i,
-        /^[*＊]?邮政服务[*＊]?/i,
-      ];
-
-      function cleanTaxPrefix(name) {
-        let s = (name || '').trim();
-        s = s.replace(/^[*＊][^*＊\n]+[*＊]/, '');
-        for (const p of TAX_PREFIXES) {
-          s = s.replace(p, '');
-        }
-        return s.trim();
-      }
-
-      const SCENE_RULES = [
-        { match: (s) => /^火车票(\s+[^\s-]+-[^\s-]+)?$/.test(s), norm: (s) => s },
-        { match: (s) => /航空|客运行程单|民航|机票|飞机票|航空运输/.test(s), norm: () => '飞机票' },
-        { isVehicle: true, match: (s) => /汽油|柴油|燃油|加油|乙醇汽油|车用汽油|92#|95#|98#|0#柴油|天然气|CNG|LPG/.test(s), norm: () => '加油费' },
-        { isVehicle: true, match: (s) => /通行费|高速|过路|过桥|ETC|路桥费/.test(s), norm: () => '通行费' },
-        { isVehicle: true, match: (s) => /停车|停放|泊车|车位/.test(s), norm: () => '停车费' },
-        { isVehicle: true, match: (s) => /修车|洗车|汽车维修|车辆维修|车辆保养|汽车保养|年检|补胎|换机油|机油/.test(s), norm: () => '车辆维保费' },
-        { match: (s) => /客运|打车|出租车|网约车|出行|代驾|交通费|包车|轮渡/.test(s), norm: () => '客运服务费' },
-        { match: (s) => /餐饮|餐费|堂食|外卖|正餐|快餐|工作餐|用餐|伙食|就餐|食品饮料|饭费|点心|茶饮/.test(s), norm: () => '餐饮费' },
-        { match: (s) => /住宿|酒店|客房|宾馆|旅馆|房费|民宿/.test(s), norm: () => '住宿费' },
-        { match: (s) => /办公用品|办公设备|耗材|打印纸|复印纸|文具|硒鼓|墨盒|笔记本|签字笔|办公杂品|纸张/.test(s), norm: () => '办公用品费' },
-        { match: (s) => /快递|物流|邮政|顺丰|货运|托运|邮费|邮寄|派送/.test(s), norm: () => '快递物流费' },
-        { match: (s) => /通讯|通信|话费|电话|移动通信|宽带|电信|移动|联通|流量/.test(s), norm: () => '通讯费' },
-        { match: (s) => /会务|会议|培训|研讨|展览|展会|峰会/.test(s), norm: () => '会务培训费' },
-        { match: (s) => /广告|推广|宣传|营销|展板|物料制作|海报/.test(s), norm: () => '广告宣传费' },
-        { match: (s) => /技术服务|软件|信息技术|云服务|系统开发|运维|SaaS|会员费|云主机/.test(s), norm: () => '技术服务费' },
-        { match: (s) => /物业|保洁|保安|水费|电费|燃气费|暖气|空调/.test(s), norm: () => '物业水电费' },
-      ];
-
-      function smartNormalizeProject(raw, plate) {
-        const cleaned = cleanTaxPrefix(raw);
-        for (const r of SCENE_RULES) {
-          if (r.match(cleaned) || r.match(raw)) {
-            const base = r.norm(cleaned || raw);
-            if (r.isVehicle && plate) {
-              return base + ' ' + plate;
-            }
-            return base;
-          }
-        }
-        if (plate) {
-          return (cleaned || raw || '电子发票') + ' ' + plate;
-        }
-        return cleaned || raw || '电子发票';
       }
 
       let itemName = '';

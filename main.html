@@ -62,8 +62,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script></script>
-  <script src="static/js/custom/expense-report-core.js?v=2"></script>
+  <script src="static/js/custom/expense-report-core.js?v=20261014_02"></script>
   <script>
     (function () {
 
@@ -124,7 +123,13 @@
         return url;
       };
 
-      const { initPdfJs, extractInvoiceDataFromPdf } = window.__expenseReportCore || {};
+      function extractInvoiceDataFromPdf(name, file) {
+        if (window.__expenseReportCore && typeof window.__expenseReportCore.extractInvoiceDataFromPdf === 'function') {
+          return window.__expenseReportCore.extractInvoiceDataFromPdf(name, file);
+        }
+        console.warn('⚠️ 核心提取器准备中，使用保底提取');
+        return Promise.resolve({ amount: 0, date: new Date(), itemName: '电子发票', fileName: name });
+      }
 
       window.__invoiceDataCache = window.__invoiceDataCache || {};
 
@@ -3120,7 +3125,7 @@
   <script>
     self.__next_f.push([
       1,
-      '15:{"metadata":[["$","title","0",{"children":"发票打印助手"}],["$","meta","1",{"name":"description","content":"专业的电子发票处理解决方案，支持批量合并、自动统计、一键打印。让报销更简单，让财务更轻松。免费在线使用。"}],["$","meta","2",{"name":"author","content":"发票打印助手"}],["$","link","3",{"rel":"manifest","href":"/manifest.json","crossOrigin":"$undefined"}],["$","meta","4",{"name":"keywords","content":"电子发票,发票合并,发票处理,PDF合并,批量处理,财务工具,报销工具,发票统计,发票打印"}],["$","meta","5",{"name":"creator","content":"发票打印助手"}],["$","meta","6",{"name":"publisher","content":"发票打印助手"}],["$","meta","7",{"name":"robots","content":"index, follow"}],["$","meta","8",{"name":"apple-mobile-web-app-title","content":"发票打印助手"}],["$","meta","9",{"property":"og:title","content":"发票打印助手 - 让报销更简单，让财务更轻松"}],["$","meta","10",{"property":"og:description","content":"专业的电子发票处理解决方案，支持批量合并、自动统计、一键打印"}],["$","meta","11",{"property":"og:locale","content":"zh_CN"}],["$","meta","12",{"property":"og:type","content":"website"}],["$","meta","13",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","14",{"name":"twitter:title","content":"发票打印助手"}],["$","meta","15",{"name":"twitter:description","content":"专业的电子发票处理解决方案，让报销更简单，让财务更轻松"}],["$","link","16",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"48x48"}],["$","link","17",{"rel":"icon","href":"/icon0.svg?eb1262b39108723a","type":"image/svg+xml","sizes":"any"}],["$","link","18",{"rel":"icon","href":"/icon1.png?873064b22fb970bd","type":"image/png","sizes":"96x96"}],["$","link","19",{"rel":"apple-touch-icon","href":"/apple-icon.png?477d8be8c2b1658d","type":"image/png","sizes":"180x180"}]],"error":null,"digest":"$undefined"}\nf:{"metadata":"$15:metadata","error":null,"digest":"$undefined"}\n',
+      '15:{"metadata":[["$","title","0",{"children":"发票打印助手"}],["$","meta","1",{"name":"description","content":"专业的电子发票处理解决方案，支持批量合并、自动统计、一键打印。让报销更简单，让财务更轻松。免费在线使用。"}],["$","meta","2",{"name":"author","content":"发票打印助手"}],["$","link","3",{"rel":"manifest","href":"manifest.json","crossOrigin":"$undefined"}],["$","meta","4",{"name":"keywords","content":"电子发票,发票合并,发票处理,PDF合并,批量处理,财务工具,报销工具,发票统计,发票打印"}],["$","meta","5",{"name":"creator","content":"发票打印助手"}],["$","meta","6",{"name":"publisher","content":"发票打印助手"}],["$","meta","7",{"name":"robots","content":"index, follow"}],["$","meta","8",{"name":"apple-mobile-web-app-title","content":"发票打印助手"}],["$","meta","9",{"property":"og:title","content":"发票打印助手 - 让报销更简单，让财务更轻松"}],["$","meta","10",{"property":"og:description","content":"专业的电子发票处理解决方案，支持批量合并、自动统计、一键打印"}],["$","meta","11",{"property":"og:locale","content":"zh_CN"}],["$","meta","12",{"property":"og:type","content":"website"}],["$","meta","13",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","14",{"name":"twitter:title","content":"发票打印助手"}],["$","meta","15",{"name":"twitter:description","content":"专业的电子发票处理解决方案，让报销更简单，让财务更轻松"}],["$","link","16",{"rel":"icon","href":"favicon.ico","type":"image/x-icon","sizes":"48x48"}],["$","link","17",{"rel":"icon","href":"icon0.svg?eb1262b39108723a","type":"image/svg+xml","sizes":"any"}],["$","link","18",{"rel":"icon","href":"icon1.png?873064b22fb970bd","type":"image/png","sizes":"96x96"}],["$","link","19",{"rel":"apple-touch-icon","href":"apple-icon.png?477d8be8c2b1658d","type":"image/png","sizes":"180x180"}]],"error":null,"digest":"$undefined"}\nf:{"metadata":"$15:metadata","error":null,"digest":"$undefined"}\n',
     ]);
   </script>
   
